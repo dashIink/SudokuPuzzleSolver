@@ -8,6 +8,11 @@
 #include <sys/wait.h>
 #include <pthread.h>
 
+typedef struct 
+{ 
+    int row; 
+    int column; 
+} parameters; 
 
 int board[9][9] = {
 	{5,3,4,6,7,8,9,1,2},
@@ -79,16 +84,52 @@ void *checkSquares(void *){
     }
 }
 
+void *checkSquare(void *data){
+    //printf("%d", ((parameters*)data)->row);
+    int j = ((parameters*)data)->row;
+    int h = ((parameters*)data)->column;
+    int check[9] = {0,0,0,0,0,0,0,0,0};
+    for(int i = j; i < j+3; i++){
+        for(int x = h; x < h+3; x++){
+            check[board[i][x]-1] += 1;
+            if (check[board[i][x]-1] > 1){
+                squareCheck = false;
+            }
+        }
+    }
+    for(int x = 0; x < 9; x++){ 
+        check[x] = 0;
+    }
+        
+        
+    
+}
+
 int main(){
-		pthread_t id[3];
+		pthread_t id[11];
 		//int arg = 1;
 		pthread_create(&id[0], NULL, *checkRows, NULL);
 		pthread_create(&id[1], NULL, *checkColumns, NULL);
-		pthread_create(&id[2], NULL, *checkSquares, NULL);
+		//pthread_create(&id[2], NULL, *checkSquares, NULL);
+		
+		
+		int i = 2;
+		for(int x = 0; x < 9; x+=3){
+		    for(int y = 0; y < 9; y+=3){
+    		    parameters *data = (parameters *) malloc(sizeof(parameters)); 
+                data->row = x;
+                data->column = y; 
+    		    pthread_create(&id[i], NULL, *checkSquare, (void *)data);
+    		    i++;
+		    }
+		}
 		
 		pthread_join(id[0], NULL);
 		pthread_join(id[1], NULL);
-		pthread_join(id[2], NULL);
+		for(int h = 2; h < 11; h++){
+		    pthread_join(id[h], NULL);
+		}
+		
 		if (rowCheck && columnCheck && squareCheck){
 		    printf("It is a correct sudoku Puzzle!");
 		}
